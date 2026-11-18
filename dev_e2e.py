@@ -13,6 +13,9 @@ import dev_loo4 as L
 
 KIT = L.KIT
 REPO = Path.home() / "workspace/makefun/bot-gta6"
+# v1 is pinned explicitly: HEAD is v2, so loading main.py from HEAD
+# would load v2 again and the E2E would compare v2 with itself (A1).
+V1_COMMIT = "5b64e7e3bb9047922aaa25cb5f69a389cb1f3aaf"
 
 
 def load_mod(path, name):
@@ -57,12 +60,12 @@ def e2e(mod, data, curves):
 def main():
     data = json.loads((KIT / "input" / "p00.in").read_text())
     curves = L.load()
-    v1_src = subprocess.run(["git", "-C", str(REPO), "show", "HEAD:main.py"],
+    v1_src = subprocess.run(["git", "-C", str(REPO), "show", f"{V1_COMMIT}:main.py"],
                             capture_output=True, text=True, check=True).stdout
     Path("/tmp/main_v1.py").write_text(v1_src)
     v1 = load_mod("/tmp/main_v1.py", "main_v1")
     v2 = load_mod(REPO / "main.py", "main_v2")
-    for label, mod in [("v1 (git HEAD)", v1), ("v2 (working tree)", v2)]:
+    for label, mod in [("v1 (pin 5b64e7e)", v1), ("v2 (working tree)", v2)]:
         r, a, _per = e2e(mod, data, curves)
         print(f"{label:20s} e2e rolling {r:.4f}   all36 {a:.4f}")
     _r, _a, per = e2e(v2, data, curves)
